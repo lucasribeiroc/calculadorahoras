@@ -31,3 +31,25 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Adicione esta regra ao seu globals.css */
+.react-calendar__month-view__weekdays__weekday {
+  color: black !important;
+}
+
+/* Adicione esta regra ao seu globals.css */
+.custom-calendar {
+  width: 100%;
+  max-width: 800px; /* Ajuste o valor conforme necessário */
+  margin: 0 auto;
+}
+
+.custom-calendar .react-calendar {
+  width: 100%;
+  height: 100%;
+}
+
+/* Adicione esta regra ao seu globals.css */
+.tile-disabled {
+  color: #d3d3d3 !important; /* Cor cinza claro para datas apagadas */
+}
