@@ -60,6 +60,17 @@ const CardsModulo = () => {
     }
   };
 
+  const handleDelete = async (date) => {
+    try {
+      await axios.delete("http://localhost:3001/api/delete-times", {
+        data: { date },
+      });
+      setDaysData((prevData) => prevData.filter((day) => day.date !== date));
+    } catch (error) {
+      console.error("Erro ao excluir os dados:", error);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
       {daysData.length === 0 ? (
@@ -68,21 +79,28 @@ const CardsModulo = () => {
         daysData.map((dayData) => (
           <div
             key={dayData.date}
-            className="bg-blue-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-            onClick={() => handleOpenModal(dayData.date)}
+            className="relative bg-blue-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           >
-            <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-              {formatDate(dayData.date)}
-            </h3>
-            {dayData.times.map((time, index) => (
-              <div key={index} className="text-gray-700">
-                {time.entrada && <p>Entrada: {time.entrada}</p>}
-                {time.saida && <p>Saída: {time.saida}</p>}
-              </div>
-            ))}
-            <p className="text-lg text-gray-600 mt-4">
-              Total de Horas: {formatHours(dayData.totalHours)}
-            </p>
+            <button
+              className="absolute top-2 right-4 text-red-500" // Alterado de right-2 para right-4
+              onClick={() => handleDelete(dayData.date)}
+            >
+              X
+            </button>
+            <div onClick={() => handleOpenModal(dayData.date)}>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                {formatDate(dayData.date)}
+              </h3>
+              {dayData.times.map((time, index) => (
+                <div key={index} className="text-gray-700">
+                  {time.entrada && <p>Entrada: {time.entrada}</p>}
+                  {time.saida && <p>Saída: {time.saida}</p>}
+                </div>
+              ))}
+              <p className="text-lg text-gray-600 mt-4">
+                Total de Horas: {formatHours(dayData.totalHours)}
+              </p>
+            </div>
           </div>
         ))
       )}

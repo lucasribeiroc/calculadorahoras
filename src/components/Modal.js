@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const Modal = ({ closeModal, date }) => {
+const Modal = ({ closeModal, date, onSave }) => {
   const [times, setTimes] = useState(
     Array.from({ length: 5 }, () => ({
       entrada: "",
@@ -51,13 +51,18 @@ const Modal = ({ closeModal, date }) => {
       return;
     }
     try {
-      await axios.post("http://localhost:3001/api/save-times", {
-        date,
-        times,
-        totalHours,
-      });
+      const response = await axios.post(
+        "http://localhost:3001/api/save-times",
+        {
+          date,
+          times,
+          totalHours,
+        }
+      );
       alert("Horários salvos com sucesso!");
-      window.location.reload(); // Recarrega o site inteiro
+      closeModal();
+      onSave(); // Chama o callback para notificar o componente pai
+      window.location.reload(); // Recarrega a página
     } catch (error) {
       console.error("Erro ao salvar os horários no backend:", error);
       setError("Erro ao salvar os horários. Tente novamente.");
@@ -72,7 +77,10 @@ const Modal = ({ closeModal, date }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+      style={{ zIndex: 9999 }}
+    >
       <div className="bg-white p-4 rounded shadow-lg w-full max-w-md">
         <h2 className="text-center text-xl mb-4 text-black">
           Lance suas horas
