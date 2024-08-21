@@ -8,6 +8,7 @@ const Modal = ({ closeModal, date }) => {
       saida: "",
     }))
   );
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,6 +22,7 @@ const Modal = ({ closeModal, date }) => {
         setTimes(response.data.times);
       } catch (error) {
         console.error("Erro ao buscar os horários do backend:", error);
+        setError("Erro ao buscar os horários. Tente novamente.");
       }
     };
 
@@ -44,20 +46,21 @@ const Modal = ({ closeModal, date }) => {
 
   const handleSave = async () => {
     const totalHours = calculateTotalHours();
+    if (totalHours <= 0) {
+      setError("Por favor, insira horários válidos.");
+      return;
+    }
     try {
-      const response = await axios.post(
-        "http://localhost:3001/api/save-times",
-        {
-          date,
-          times,
-          totalHours,
-        }
-      );
+      await axios.post("http://localhost:3001/api/save-times", {
+        date,
+        times,
+        totalHours,
+      });
       alert("Horários salvos com sucesso!");
-      closeModal();
+      window.location.reload(); // Recarrega o site inteiro
     } catch (error) {
       console.error("Erro ao salvar os horários no backend:", error);
-      alert("Erro ao salvar os horários. Tente novamente.");
+      setError("Erro ao salvar os horários. Tente novamente.");
     }
   };
 
@@ -65,6 +68,7 @@ const Modal = ({ closeModal, date }) => {
     const newTimes = [...times];
     newTimes[index][type] = value;
     setTimes(newTimes);
+    setError(""); // Limpa a mensagem de erro ao alterar os horários
   };
 
   return (
@@ -74,6 +78,7 @@ const Modal = ({ closeModal, date }) => {
           Lance suas horas
         </h2>
         <p className="text-center mb-4 text-black">{date}</p>
+        {error && <p className="text-center mb-4 text-red-500">{error}</p>}
         <div className="space-y-2">
           {times.map((time, index) => (
             <div key={index} className="flex space-x-2">

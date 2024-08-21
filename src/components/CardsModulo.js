@@ -1,23 +1,64 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { parseISO, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import Modal from "./Modal"; // Importe o Modal
 
 const CardsModulo = () => {
   const [daysData, setDaysData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/load");
+      console.log("Dados recebidos do backend:", response.data);
+      const days = response.data;
+      console.log("Dados processados:", days);
+      setDaysData(days);
+    } catch (error) {
+      console.error("Erro ao carregar os dados:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/load");
-        console.log("Dados recebidos do backend:", response.data);
-        const days = response.data;
-        console.log("Dados processados:", days);
-        setDaysData(days);
-      } catch (error) {
-        console.error("Erro ao carregar os dados:", error);
-      }
-    };
     fetchData();
   }, []);
+
+  const formatDate = (dateString) => {
+    const date = parseISO(dateString);
+    return format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
+  };
+
+  const formatHours = (decimalHours) => {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}`;
+  };
+
+  const handleOpenModal = (date) => {
+    setSelectedDate(date);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedDate(null);
+  };
+
+  const handleSave = async (updatedData) => {
+    try {
+      // Supondo que você tenha uma rota para salvar os dados
+      await axios.post("http://localhost:3001/save", updatedData);
+      fetchData(); // Atualiza os dados após salvar
+      handleCloseModal();
+    } catch (error) {
+      console.error("Erro ao salvar os dados:", error);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
@@ -28,22 +69,29 @@ const CardsModulo = () => {
           <div
             key={dayData.date}
             className="bg-blue-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            onClick={() => handleOpenModal(dayData.date)}
           >
             <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-              {dayData.date}
+              {formatDate(dayData.date)}
             </h3>
-            <p className="text-lg text-gray-600 mb-4">
-              Total de Horas: {dayData.totalHours.toFixed(2)}
+            {dayData.times.map((time, index) => (
+              <div key={index} className="text-gray-700">
+                {time.entrada && <p>Entrada: {time.entrada}</p>}
+                {time.saida && <p>Saída: {time.saida}</p>}
+              </div>
+            ))}
+            <p className="text-lg text-gray-600 mt-4">
+              Total de Horas: {formatHours(dayData.totalHours)}
             </p>
-            <ul className="list-disc list-inside">
-              {dayData.times.map((time, index) => (
-                <li key={index} className="text-gray-700">
-                  Entrada: {time.entrada}, Saída: {time.saida}
-                </li>
-              ))}
-            </ul>
           </div>
         ))
+      )}
+      {isModalOpen && (
+        <Modal
+          closeModal={handleCloseModal}
+          date={selectedDate}
+          onSave={handleSave} // Passa o callback para o Modal
+        />
       )}
     </div>
   );
