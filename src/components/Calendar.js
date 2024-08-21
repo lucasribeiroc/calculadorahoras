@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
 import ReactCalendar from "react-calendar";
-import Modal from "../components/Modal";
+import Modal from "./Modal";
 import "react-calendar/dist/Calendar.css";
+import axios from "axios";
 
 const Calendar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Garantir que a data atual seja definida apenas no cliente
     setCurrentDate(new Date());
+    setIsClient(true);
   }, []);
 
-  const openModal = (date) => {
-    setSelectedDate(date);
+  const openModal = async (date) => {
+    const formattedDate = date.toISOString().split("T")[0];
+    setSelectedDate(formattedDate);
     setIsModalOpen(true);
   };
 
@@ -26,6 +29,10 @@ const Calendar = () => {
   const handleDateClick = (date) => {
     openModal(date);
   };
+
+  if (!isClient) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-4">
