@@ -3,6 +3,19 @@ import axios from "axios";
 import { parseISO, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Modal from "./Modal"; // Importe o Modal
+import { darken } from "polished"; // Importe a função darken
+import {
+  Box,
+  Button,
+  Grid,
+  Heading,
+  Text,
+  useColorModeValue,
+  IconButton,
+  Flex,
+  Divider,
+} from "@chakra-ui/react";
+import { DeleteIcon, EditIcon, CalendarIcon, TimeIcon } from "@chakra-ui/icons"; // Importe os ícones DeleteIcon, EditIcon, CalendarIcon e TimeIcon
 
 const CardsModulo = () => {
   const [daysData, setDaysData] = useState([]);
@@ -72,36 +85,86 @@ const CardsModulo = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+    <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={4} p={4}>
       {daysData.length === 0 ? (
-        <p className="text-center text-gray-500">Nenhum dado disponível</p>
+        <Text textAlign="center" color="gray.500">
+          Nenhum dado disponível
+        </Text>
       ) : (
         daysData.map((dayData) => (
-          <div
+          <Box
             key={dayData.date}
-            className="relative bg-blue-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            border="1px solid white" // Borda branca de 1px
+            p={4}
+            rounded="lg"
+            shadow="md"
+            transition="shadow 0.3s"
+            color="white" // Cor da fonte branca
+            boxShadow="0 8px 16px rgba(0, 0, 0, 0.6)" // Sombra preta mais escura e mais distante
+            display="flex"
+            flexDirection="column"
           >
-            <button
-              className="absolute top-2 right-4 text-red-500" // Alterado de right-2 para right-4
-              onClick={() => handleDelete(dayData.date)}
-            >
-              X
-            </button>
-            <div onClick={() => handleOpenModal(dayData.date)}>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+            {/* Header */}
+            <Box mb={2} display="flex" alignItems="center">
+              <CalendarIcon color="white" mr={2} />
+              <Heading as="h3" size="md" color="white">
                 {formatDate(dayData.date)}
-              </h3>
+              </Heading>
+            </Box>
+            <Divider borderColor="white" my={2} /> {/* Margem vertical */}
+            {/* Body */}
+            <Box mb={4}>
               {dayData.times.map((time, index) => (
-                <div key={index} className="text-gray-700">
-                  {time.entrada && <p>Entrada: {time.entrada}</p>}
-                  {time.saida && <p>Saída: {time.saida}</p>}
-                </div>
+                <Text key={index} color="white">
+                  {time.entrada && (
+                    <Flex alignItems="center">
+                      <TimeIcon color="white" mr={2} />
+                      <p>Entrada: {time.entrada}</p>
+                    </Flex>
+                  )}
+                  {time.saida && (
+                    <Flex alignItems="center">
+                      <TimeIcon color="white" mr={2} />
+                      <p>Saída: {time.saida}</p>
+                    </Flex>
+                  )}
+                </Text>
               ))}
-              <p className="text-lg text-gray-600 mt-4">
-                Total de Horas: {formatHours(dayData.totalHours)}
-              </p>
-            </div>
-          </div>
+            </Box>
+            <Divider borderColor="white" mt="auto" mb={2} />{" "}
+            {/* Margem vertical */}
+            {/* Footer */}
+            <Flex justifyContent="space-between" alignItems="center">
+              <Flex alignItems="center">
+                <TimeIcon color="white" mr={2} />
+                <Text fontSize="md" color="white">
+                  Total de Horas: {formatHours(dayData.totalHours)}
+                </Text>
+              </Flex>
+              <Flex gap={2}>
+                <IconButton
+                  colorScheme="blue"
+                  size="sm"
+                  icon={<EditIcon />}
+                  border="1px solid white" // Borda branca de 1px
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenModal(dayData.date);
+                  }}
+                />
+                <IconButton
+                  colorScheme="red"
+                  size="sm"
+                  icon={<DeleteIcon />}
+                  border="1px solid white" // Borda branca de 1px
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(dayData.date);
+                  }}
+                />
+              </Flex>
+            </Flex>
+          </Box>
         ))
       )}
       {isModalOpen && (
@@ -111,7 +174,7 @@ const CardsModulo = () => {
           onSave={handleSave} // Passa o callback para o Modal
         />
       )}
-    </div>
+    </Grid>
   );
 };
 

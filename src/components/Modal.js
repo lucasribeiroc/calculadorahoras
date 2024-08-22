@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Alert, AlertIcon, Stack, CloseButton } from "@chakra-ui/react";
+import { CheckIcon } from "@chakra-ui/icons";
 
 const Modal = ({ closeModal, date, onSave }) => {
   const [times, setTimes] = useState(
@@ -9,6 +11,8 @@ const Modal = ({ closeModal, date, onSave }) => {
     }))
   );
   const [error, setError] = useState("");
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,6 +27,7 @@ const Modal = ({ closeModal, date, onSave }) => {
       } catch (error) {
         console.error("Erro ao buscar os horários do backend:", error);
         setError("Erro ao buscar os horários. Tente novamente.");
+        setShowErrorAlert(true);
       }
     };
 
@@ -48,6 +53,7 @@ const Modal = ({ closeModal, date, onSave }) => {
     const totalHours = calculateTotalHours();
     if (totalHours <= 0) {
       setError("Por favor, insira horários válidos.");
+      setShowErrorAlert(true);
       return;
     }
     try {
@@ -59,13 +65,19 @@ const Modal = ({ closeModal, date, onSave }) => {
           totalHours,
         }
       );
-      alert("Horários salvos com sucesso!");
-      closeModal();
-      onSave(); // Chama o callback para notificar o componente pai
-      window.location.reload(); // Recarrega a página
+      setShowSuccessAlert(true);
+      setTimeout(() => {
+        setShowSuccessAlert(false);
+        closeModal();
+        if (typeof onSave === "function") {
+          console.log("onSave callback chamado"); // Log para depuração
+          onSave(); // Chama o callback para notificar o componente pai
+        }
+      }, 2000);
     } catch (error) {
       console.error("Erro ao salvar os horários no backend:", error);
       setError("Erro ao salvar os horários. Tente novamente.");
+      setShowErrorAlert(true);
     }
   };
 
@@ -74,54 +86,78 @@ const Modal = ({ closeModal, date, onSave }) => {
     newTimes[index][type] = value;
     setTimes(newTimes);
     setError(""); // Limpa a mensagem de erro ao alterar os horários
+    setShowErrorAlert(false);
   };
 
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-      style={{ zIndex: 9999 }}
+      style={{ zIndex: 9999, backdropFilter: "blur(5px)" }}
     >
-      <div className="bg-white p-4 rounded shadow-lg w-full max-w-md">
-        <h2 className="text-center text-xl mb-4 text-black">
-          Lance suas horas
-        </h2>
-        <p className="text-center mb-4 text-black">{date}</p>
-        {error && <p className="text-center mb-4 text-red-500">{error}</p>}
-        <div className="space-y-2">
-          {times.map((time, index) => (
-            <div key={index} className="flex space-x-2">
-              <input
-                type="time"
-                value={time.entrada}
-                onChange={(e) =>
-                  handleTimeChange(index, "entrada", e.target.value)
-                }
-                className="flex-1 p-2 border border-gray-300 rounded text-black"
-              />
-              <input
-                type="time"
-                value={time.saida}
-                onChange={(e) =>
-                  handleTimeChange(index, "saida", e.target.value)
-                }
-                className="flex-1 p-2 border border-gray-300 rounded text-black"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="text-center mt-4 flex justify-center space-x-4">
-          <button
+      <div
+        className="relative p-4 rounded shadow-lg w-full max-w-md"
+        style={{ backgroundColor: "#4682B4", border: "1px solid white" }}
+      >
+        <div className="relative p-4 rounded">
+          <CloseButton
+            size="sm"
             onClick={closeModal}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            Fechar
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-4 py-2 bg-green-500 text-white rounded"
-          >
-            Salvar
-          </button>
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              color: "white",
+            }}
+          />
+          <h2 className="text-center text-xl mb-4 text-white">
+            Lance suas horas
+          </h2>
+          <p className="text-center mb-4 text-white">{date}</p>
+          {showErrorAlert && (
+            <Stack spacing={3} className="mb-4">
+              <Alert status="error">
+                <AlertIcon />
+                {error}
+              </Alert>
+            </Stack>
+          )}
+          {showSuccessAlert && (
+            <Alert status="success" className="mb-4">
+              <AlertIcon />
+              Horários salvos com sucesso!
+            </Alert>
+          )}
+          <div className="space-y-2">
+            {times.map((time, index) => (
+              <div key={index} className="flex space-x-2">
+                <input
+                  type="time"
+                  value={time.entrada}
+                  onChange={(e) =>
+                    handleTimeChange(index, "entrada", e.target.value)
+                  }
+                  className="flex-1 p-2 border border-gray-300 rounded text-black"
+                />
+                <input
+                  type="time"
+                  value={time.saida}
+                  onChange={(e) =>
+                    handleTimeChange(index, "saida", e.target.value)
+                  }
+                  className="flex-1 p-2 border border-gray-300 rounded text-black"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-4 flex justify-center">
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 border border-white w-full flex items-center justify-center"
+            >
+              <CheckIcon className="mr-2" />
+              <span className="font-bold">Salvar</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

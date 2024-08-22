@@ -1,7 +1,7 @@
 const Header = () => {
   return (
-    <header className="bg-gray-300 p-4">
-      <h2 className="text-center text-black font-verdana text-xl">
+    <header className="p-4 relative overflow-hidden">
+      <h2 className="text-center text-white font-verdana text-xl font-bold relative z-10">
         Calculadora de Horas
       </h2>
     </header>
