@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import { parseISO, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,29 +14,25 @@ import {
   IconButton,
   Flex,
   Divider,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  Alert,
+  AlertIcon,
+  Stack,
 } from "@chakra-ui/react";
 import { DeleteIcon, EditIcon, CalendarIcon, TimeIcon } from "@chakra-ui/icons"; // Importe os ícones DeleteIcon, EditIcon, CalendarIcon e TimeIcon
 
-const CardsModulo = () => {
-  const [daysData, setDaysData] = useState([]);
+const CardsModulo = ({ data }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
-
-  const fetchData = async () => {
-    try {
-      const response = await axios.get("http://localhost:3001/load");
-      console.log("Dados recebidos do backend:", response.data);
-      const days = response.data;
-      console.log("Dados processados:", days);
-      setDaysData(days);
-    } catch (error) {
-      console.error("Erro ao carregar os dados:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [dateToDelete, setDateToDelete] = useState(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false); // Estado para controlar a exibição do alerta de sucesso
+  const cancelRef = useRef();
 
   const formatDate = (dateString) => {
     const date = parseISO(dateString);
@@ -66,32 +62,63 @@ const CardsModulo = () => {
     try {
       // Supondo que você tenha uma rota para salvar os dados
       await axios.post("http://localhost:3001/save", updatedData);
-      fetchData(); // Atualiza os dados após salvar
       handleCloseModal();
     } catch (error) {
       console.error("Erro ao salvar os dados:", error);
     }
   };
 
-  const handleDelete = async (date) => {
+  const handleDelete = async () => {
+    setIsAlertOpen(false); // Fechar o AlertDialog imediatamente
     try {
       await axios.delete("http://localhost:3001/api/delete-times", {
-        data: { date },
+        data: { date: dateToDelete },
       });
-      setDaysData((prevData) => prevData.filter((day) => day.date !== date));
+      // Atualize os dados localmente após a exclusão
+      setDaysData((prevData) =>
+        prevData.filter((day) => day.date !== dateToDelete)
+      );
+      setShowSuccessAlert(true); // Mostrar o alerta de sucesso
+      setTimeout(() => setShowSuccessAlert(false), 3000); // Ocultar o alerta após 3 segundos
     } catch (error) {
       console.error("Erro ao excluir os dados:", error);
     }
   };
 
+  const openAlertDialog = (date) => {
+    setDateToDelete(date);
+    setIsAlertOpen(true);
+  };
+
+  const closeAlertDialog = () => {
+    setIsAlertOpen(false);
+    setDateToDelete(null);
+  };
+
   return (
     <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={4} p={4}>
-      {daysData.length === 0 ? (
+      {showSuccessAlert && (
+        <Box
+          position="fixed"
+          bottom="4"
+          left="50%"
+          transform="translateX(-50%)"
+          zIndex="1000"
+        >
+          <Stack spacing={3}>
+            <Alert status="success">
+              <AlertIcon />
+              Registro excluído com sucesso!
+            </Alert>
+          </Stack>
+        </Box>
+      )}
+      {data.length === 0 ? (
         <Text textAlign="center" color="gray.500">
           Nenhum dado disponível
         </Text>
       ) : (
-        daysData.map((dayData) => (
+        data.map((dayData) => (
           <Box
             key={dayData.date}
             border="1px solid white" // Borda branca de 1px
@@ -159,7 +186,7 @@ const CardsModulo = () => {
                   border="1px solid white" // Borda branca de 1px
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(dayData.date);
+                    openAlertDialog(dayData.date);
                   }}
                 />
               </Flex>
@@ -174,6 +201,33 @@ const CardsModulo = () => {
           onSave={handleSave} // Passa o callback para o Modal
         />
       )}
+      <AlertDialog
+        isOpen={isAlertOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={closeAlertDialog}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Exclusão
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Você tem certeza que deseja excluir este registro? Esta ação não
+              pode ser desfeita.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={closeAlertDialog}>
+                Não
+              </Button>
+              <Button colorScheme="red" onClick={handleDelete} ml={3}>
+                Sim
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Grid>
   );
 };
