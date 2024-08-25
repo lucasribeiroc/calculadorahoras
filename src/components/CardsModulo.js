@@ -20,18 +20,16 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  Alert,
-  AlertIcon,
   Stack,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { DeleteIcon, EditIcon, CalendarIcon, TimeIcon } from "@chakra-ui/icons"; // Importe os ícones DeleteIcon, EditIcon, CalendarIcon e TimeIcon
 
-const CardsModulo = ({ data }) => {
+const CardsModulo = ({ data, setDaysData, onDeleteSuccess }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [dateToDelete, setDateToDelete] = useState(null);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false); // Estado para controlar a exibição do alerta de sucesso
   const cancelRef = useRef();
 
   const formatDate = (dateString) => {
@@ -78,8 +76,7 @@ const CardsModulo = ({ data }) => {
       setDaysData((prevData) =>
         prevData.filter((day) => day.date !== dateToDelete)
       );
-      setShowSuccessAlert(true); // Mostrar o alerta de sucesso
-      setTimeout(() => setShowSuccessAlert(false), 3000); // Ocultar o alerta após 3 segundos
+      onDeleteSuccess(); // Chama a função de callback para exibir o alerta de sucesso
     } catch (error) {
       console.error("Erro ao excluir os dados:", error);
     }
@@ -97,22 +94,6 @@ const CardsModulo = ({ data }) => {
 
   return (
     <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={4} p={4}>
-      {showSuccessAlert && (
-        <Box
-          position="fixed"
-          bottom="4"
-          left="50%"
-          transform="translateX(-50%)"
-          zIndex="1000"
-        >
-          <Stack spacing={3}>
-            <Alert status="success">
-              <AlertIcon />
-              Registro excluído com sucesso!
-            </Alert>
-          </Stack>
-        </Box>
-      )}
       {data.length === 0 ? (
         <Text textAlign="center" color="gray.500">
           Nenhum dado disponível
