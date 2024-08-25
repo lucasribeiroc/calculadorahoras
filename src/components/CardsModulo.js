@@ -4,6 +4,9 @@ import { parseISO, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Modal from "./Modal"; // Importe o Modal
 import { darken } from "polished"; // Importe a função darken
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import {
   Box,
   Button,
@@ -46,7 +49,9 @@ const CardsModulo = ({ data, setDaysData, onDeleteSuccess }) => {
   const valorHora = 25.0;
 
   useEffect(() => {
-    calculateTotalMonthlyHours();
+    if (data.length > 0) {
+      calculateTotalMonthlyHours();
+    }
   }, [data]);
 
   const calculateTotalMonthlyHours = async () => {
@@ -56,7 +61,7 @@ const CardsModulo = ({ data, setDaysData, onDeleteSuccess }) => {
     setTotalMonthlyHours(totalHours);
 
     // Atualizar as horas totais do mês no backend
-    const [year, month] = data[0]?.date.split("-") || [
+    const [year, month] = data[0]?.date?.split("-") || [
       new Date().getFullYear(),
       new Date().getMonth() + 1,
     ];
@@ -135,6 +140,7 @@ const CardsModulo = ({ data, setDaysData, onDeleteSuccess }) => {
   };
 
   const getMonthName = (dateString) => {
+    if (!dateString) return "";
     const date = parseISO(dateString);
     return (
       format(date, "MMMM", { locale: ptBR }).charAt(0).toUpperCase() +
@@ -160,18 +166,14 @@ const CardsModulo = ({ data, setDaysData, onDeleteSuccess }) => {
           textAlign="center"
         >
           <Stat>
-            <StatLabel fontSize="xl" textAlign="center">
+            <StatLabel fontSize="xl">
               Total de Horas {getMonthName(data[0]?.date)}
             </StatLabel>
-            <StatNumber fontSize="5xl" textAlign="center">
+            <StatNumber fontSize="5xl">
               {formatHours(totalMonthlyHours)}
             </StatNumber>
-            <StatHelpText
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <TimeIcon mr={2} />
+            <StatHelpText>
+              <TimeIcon mr={1} />
               Horas trabalhadas
             </StatHelpText>
           </Stat>
@@ -187,22 +189,14 @@ const CardsModulo = ({ data, setDaysData, onDeleteSuccess }) => {
           textAlign="center"
         >
           <Stat>
-            <StatLabel
-              fontSize="xl"
-              style={{ whiteSpace: "nowrap" }}
-              textAlign="center"
-            >
-              Total a receber em {getMonthName(data[0]?.date)}
+            <StatLabel fontSize="xl" style={{ whiteSpace: "nowrap" }}>
+              Receber em {getMonthName(data[0]?.date)}
             </StatLabel>
-            <StatNumber fontSize="5xl" textAlign="center">
+            <StatNumber fontSize="5xl">
               R$ {calculateTotalToReceive(totalMonthlyHours, valorHora)}
             </StatNumber>
-            <StatHelpText
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <CheckIcon mr={2} />
+            <StatHelpText>
+              <CheckIcon mr={1} />
               Valor Hora: R$ {valorHora.toFixed(2)}
             </StatHelpText>
           </Stat>
